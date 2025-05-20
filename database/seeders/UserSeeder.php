@@ -7,6 +7,8 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Models\Department;
+use App\Models\Position;
 
 class UserSeeder extends Seeder
 {
@@ -16,6 +18,8 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // Создаем администратора
+        $department = Department::where('name', 'IT-отдел')->first();
+        $position = Position::where('name', 'Системный администратор')->first();
         User::create([
             'name' => 'Администратор',
             'username' => 'admin',
@@ -23,8 +27,8 @@ class UserSeeder extends Seeder
             'role' => 'admin',
             'phone_number' => '+79990000001',
             'email' => 'admin@company.local',
-            'position' => 'Системный администратор',
-            'department' => 'ИТ-отдел',
+            'department_id' => $department ? $department->id : null,
+            'position_id' => $position ? $position->id : null,
             'hired_at' => '2020-01-15',
         ]);
 
@@ -35,7 +39,7 @@ class UserSeeder extends Seeder
                 'username' => 'ivanova',
                 'phone_number' => '+79990000002',
                 'email' => 'ivanova@company.local',
-                'position' => 'Старший HR-менеджер',
+                'position' => 'HR-специалист',
                 'department' => 'Отдел кадров',
                 'hired_at' => '2021-03-10',
             ],
@@ -44,7 +48,7 @@ class UserSeeder extends Seeder
                 'username' => 'petrov',
                 'phone_number' => '+79990000003',
                 'email' => 'petrov@company.local',
-                'position' => 'HR-менеджер',
+                'position' => 'HR-специалист',
                 'department' => 'Отдел кадров',
                 'hired_at' => '2021-06-15',
             ],
@@ -60,6 +64,8 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($hrData as $hr) {
+            $department = Department::where('name', $hr['department'])->first();
+            $position = Position::where('name', $hr['position'])->first();
             User::create([
                 'name' => $hr['name'],
                 'username' => $hr['username'],
@@ -67,31 +73,42 @@ class UserSeeder extends Seeder
                 'role' => 'hr_specialist',
                 'phone_number' => $hr['phone_number'],
                 'email' => $hr['email'],
-                'position' => $hr['position'],
-                'department' => $hr['department'],
+                'department_id' => $department ? $department->id : null,
+                'position_id' => $position ? $position->id : null,
                 'hired_at' => $hr['hired_at'],
             ]);
         }
 
-        // Создаем 20 сотрудников
+        // Создаем 20 сотрудников (используем только существующие отделы и должности из справочников)
         $departments = [
             'Производственный отдел',
-            'Финансовый отдел',
-            'ИТ-отдел',
-            'Отдел маркетинга',
-            'Отдел продаж',
-            'Юридический отдел',
-            'Административный отдел'
+            'Технический отдел',
+            'Отдел главного механика',
+            'Отдел главного энергетика',
+            'ОТиЗ',
+            'ОТК',
+            'Склад',
+            'Бухгалтерия',
+            'Отдел кадров',
+            'IT-отдел',
+            'Юридический отдел'
         ];
 
         $positions = [
-            'Производственный отдел' => ['Инженер', 'Технолог', 'Механик', 'Оператор станка', 'Сварщик'],
-            'Финансовый отдел' => ['Бухгалтер', 'Экономист', 'Финансовый аналитик', 'Кассир'],
-            'ИТ-отдел' => ['Программист', 'Системный администратор', 'Веб-разработчик', 'Тестировщик', 'DevOps-инженер'],
-            'Отдел маркетинга' => ['Маркетолог', 'SMM-специалист', 'Контент-менеджер', 'Дизайнер'],
-            'Отдел продаж' => ['Менеджер по продажам', 'Торговый представитель', 'Специалист по работе с клиентами'],
-            'Юридический отдел' => ['Юрист', 'Юрисконсульт', 'Помощник юриста'],
-            'Административный отдел' => ['Офис-менеджер', 'Секретарь', 'Администратор', 'Курьер']
+            'Генеральный директор',
+            'Главный инженер',
+            'Начальник производства',
+            'Мастер участка',
+            'Оператор станка',
+            'Слесарь',
+            'Электромонтер',
+            'Инженер-технолог',
+            'Инженер по качеству',
+            'Кладовщик',
+            'Бухгалтер',
+            'HR-специалист',
+            'Системный администратор',
+            'Юрист'
         ];
 
         $firstNames = ['Александр', 'Алексей', 'Анатолий', 'Андрей', 'Антон', 'Борис', 'Вадим', 'Валентин', 'Валерий', 'Василий', 
@@ -118,8 +135,10 @@ class UserSeeder extends Seeder
             }
 
             $username = mb_strtolower(transliterate($firstName)) . '.' . mb_strtolower(transliterate($lastName));
-            $department = $departments[array_rand($departments)];
-            $position = $positions[$department][array_rand($positions[$department])];
+            $departmentName = $departments[array_rand($departments)];
+            $positionName = $positions[array_rand($positions)];
+            $department = Department::where('name', $departmentName)->first();
+            $position = Position::where('name', $positionName)->first();
 
             // Генерируем случайную дату приема в диапазоне
             $daysToAdd = rand(0, $endDate->diffInDays($startDate));
@@ -132,8 +151,8 @@ class UserSeeder extends Seeder
                 'role' => 'employee',
                 'phone_number' => '+7999' . str_pad(rand(1000000, 9999999), 7, '0', STR_PAD_LEFT),
                 'email' => $username . $i . '@company.local',
-                'position' => $position,
-                'department' => $department,
+                'department_id' => $department ? $department->id : null,
+                'position_id' => $position ? $position->id : null,
                 'hired_at' => $hiredAt,
             ]);
         }

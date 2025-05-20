@@ -44,11 +44,11 @@
                     <div class="employee-card__info">
                         <div class="employee-card__row">
                             <span class="employee-card__label">Должность:</span>
-                            <span class="employee-card__value">{{ $user->position }}</span>
+                            <span class="employee-card__value">{{ $user->position?->name ?? '—' }}</span>
                         </div>
                         <div class="employee-card__row">
                             <span class="employee-card__label">Отдел:</span>
-                            <span class="employee-card__value">{{ $user->department }}</span>
+                            <span class="employee-card__value">{{ $user->department?->name ?? '—' }}</span>
                         </div>
                         <div class="employee-card__row">
                             <span class="employee-card__label">Дата приема:</span>

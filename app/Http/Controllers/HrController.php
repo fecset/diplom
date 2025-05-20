@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use App\Models\Department;
+use App\Models\Position;
 
 class HrController extends Controller
 {
@@ -34,7 +36,7 @@ class HrController extends Controller
         }
         
         // Запрос с сортировкой
-        $query = User::query();
+        $query = User::with(['department', 'position']);
         
         // Специальная обработка для сортировки по имени
         if ($sortField === 'name') {
@@ -86,19 +88,8 @@ class HrController extends Controller
      */
     public function createEmployee()
     {
-        $departments = User::select('department')
-                         ->distinct()
-                         ->pluck('department')
-                         ->sort()
-                         ->toArray();
-                         
-        $positions = User::select('position')
-                        ->distinct()
-                        ->whereNotNull('position')
-                        ->pluck('position')
-                        ->sort()
-                        ->toArray();
-                        
+        $departments = Department::orderBy('name')->get();
+        $positions = Position::orderBy('name')->get();
         return view('hr.personnel.create', compact('departments', 'positions'));
     }
     
@@ -112,8 +103,8 @@ class HrController extends Controller
             'username' => 'required|string|max:50|unique:users',
             'email' => 'nullable|email|max:255|unique:users',
             'phone_number' => 'nullable|string|max:20',
-            'position' => 'required|string|max:100',
-            'department' => 'required|string|max:100',
+            'department_id' => 'required|exists:departments,id',
+            'position_id' => 'required|exists:positions,id',
             'hired_at' => 'nullable|date',
             'role' => 'required|in:employee,hr_specialist,admin',
             'password' => 'required|string|min:6|confirmed',
@@ -122,8 +113,10 @@ class HrController extends Controller
             'username.required' => 'Введите логин сотрудника',
             'username.unique' => 'Такой логин уже используется',
             'email.unique' => 'Такой email уже используется',
-            'position.required' => 'Укажите должность',
-            'department.required' => 'Укажите отдел',
+            'department_id.required' => 'Укажите отдел',
+            'department_id.exists' => 'Выбранный отдел не найден',
+            'position_id.required' => 'Укажите должность',
+            'position_id.exists' => 'Выбранная должность не найдена',
             'role.required' => 'Выберите роль',
             'password.required' => 'Введите пароль',
             'password.min' => 'Минимальная длина пароля - 6 символов',
@@ -135,8 +128,8 @@ class HrController extends Controller
             'username' => $validated['username'],
             'email' => $validated['email'],
             'phone_number' => $validated['phone_number'],
-            'position' => $validated['position'],
-            'department' => $validated['department'],
+            'department_id' => $validated['department_id'],
+            'position_id' => $validated['position_id'],
             'hired_at' => $validated['hired_at'],
             'role' => $validated['role'],
             'password' => Hash::make($validated['password']),
@@ -151,19 +144,8 @@ class HrController extends Controller
      */
     public function editEmployee(User $user)
     {
-        $departments = User::select('department')
-                         ->distinct()
-                         ->pluck('department')
-                         ->sort()
-                         ->toArray();
-                         
-        $positions = User::select('position')
-                        ->distinct()
-                        ->whereNotNull('position')
-                        ->pluck('position')
-                        ->sort()
-                        ->toArray();
-                        
+        $departments = Department::orderBy('name')->get();
+        $positions = Position::orderBy('name')->get();
         return view('hr.personnel.edit', compact('user', 'departments', 'positions'));
     }
     
@@ -177,8 +159,8 @@ class HrController extends Controller
             'username' => ['required', 'string', 'max:50', Rule::unique('users')->ignore($user->id)],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'phone_number' => 'nullable|string|max:20',
-            'position' => 'required|string|max:100',
-            'department' => 'required|string|max:100',
+            'department_id' => 'required|exists:departments,id',
+            'position_id' => 'required|exists:positions,id',
             'hired_at' => 'nullable|date',
             'role' => 'required|in:employee,hr_specialist,admin',
             'password' => 'nullable|string|min:6|confirmed',
@@ -187,8 +169,10 @@ class HrController extends Controller
             'username.required' => 'Введите логин сотрудника',
             'username.unique' => 'Такой логин уже используется',
             'email.unique' => 'Такой email уже используется',
-            'position.required' => 'Укажите должность',
-            'department.required' => 'Укажите отдел',
+            'department_id.required' => 'Укажите отдел',
+            'department_id.exists' => 'Выбранный отдел не найден',
+            'position_id.required' => 'Укажите должность',
+            'position_id.exists' => 'Выбранная должность не найдена',
             'role.required' => 'Выберите роль',
             'password.min' => 'Минимальная длина пароля - 6 символов',
             'password.confirmed' => 'Пароли не совпадают',
@@ -199,8 +183,8 @@ class HrController extends Controller
         $user->username = $validated['username'];
         $user->email = $validated['email'];
         $user->phone_number = $validated['phone_number'];
-        $user->position = $validated['position'];
-        $user->department = $validated['department'];
+        $user->department_id = $validated['department_id'];
+        $user->position_id = $validated['position_id'];
         $user->hired_at = $validated['hired_at'];
         $user->role = $validated['role'];
         
@@ -260,5 +244,28 @@ class HrController extends Controller
         }
         
         return view('hr.personnel.show', compact('user', 'attendanceStats', 'leaveRequests', 'experience'));
+    }
+
+    /**
+     * Удаляет сотрудника
+     */
+    public function deleteEmployee(User $user)
+    {
+        // Проверяем, что текущий пользователь имеет права на удаление
+        if (!auth()->user()->isAdmin() && !auth()->user()->isHrSpecialist()) {
+            return redirect()->route('hr.personnel.index')
+                ->with('error', 'У вас нет прав для удаления сотрудников');
+        }
+
+        // Нельзя удалить самого себя
+        if ($user->id === auth()->id()) {
+            return redirect()->route('hr.personnel.index')
+                ->with('error', 'Вы не можете удалить свой аккаунт');
+        }
+
+        $user->delete();
+
+        return redirect()->route('hr.personnel.index')
+            ->with('success', 'Сотрудник успешно удален');
     }
 }

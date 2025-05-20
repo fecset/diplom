@@ -29,19 +29,29 @@ $special_container = true;
             <select id="filterDepartment" class="attendance__filter-select">
                 <option value="">Все отделы</option>
                 @php 
-                    $departments = $users->pluck('department')->unique()->sort()->values();
+                    $departments = $users->pluck('department')->filter()->unique('id')->sortBy('name')->values();
                 @endphp
                 @foreach($departments as $department)
-                    <option value="{{ $department }}">{{ $department }}</option>
+                    <option value="{{ $department->id }}">{{ $department->name }}</option>
                 @endforeach
             </select>
         </div>
-        
+        <div class="attendance__filter-group">
+            <label for="filterPosition" class="attendance__filter-label">Должность:</label>
+            <select id="filterPosition" class="attendance__filter-select">
+                <option value="">Все должности</option>
+                @php 
+                    $positions = $users->pluck('position')->filter()->unique('id')->sortBy('name')->values();
+                @endphp
+                @foreach($positions as $position)
+                    <option value="{{ $position->id }}">{{ $position->name }}</option>
+                @endforeach
+            </select>
+        </div>
         <div class="attendance__filter-group">
             <label for="filterName" class="attendance__filter-label">Поиск по имени:</label>
             <input type="text" id="filterName" class="attendance__filter-input" placeholder="Введите имя...">
         </div>
-        
         <button type="button" id="resetFilters" class="attendance__filter-reset">Сбросить</button>
     </div>
 
@@ -66,11 +76,11 @@ $special_container = true;
                 <tr class="attendance__data-row" 
                     data-name="{{ strtolower($user->name) }}" 
                     data-full-name="{{ $user->name }}"
-                    data-department="{{ $user->department }}" 
-                    data-position="{{ strtolower($user->position) }}">
+                    data-department="{{ $user->department?->id }}" 
+                    data-position="{{ $user->position?->id }}">
                     <td class="attendance__sticky-col attendance__sticky-col--name" data-pos="0">{{ $user->name }}</td>
-                    <td class="attendance__sticky-col attendance__sticky-col--pos" data-pos="1">{{ $user->position }}</td>
-                    <td class="attendance__sticky-col attendance__sticky-col--dep" data-pos="2">{{ $user->department }}</td>
+                    <td class="attendance__sticky-col attendance__sticky-col--pos" data-pos="1">{{ $user->position?->name ?? '—' }}</td>
+                    <td class="attendance__sticky-col attendance__sticky-col--dep" data-pos="2">{{ $user->department?->name ?? '—' }}</td>
                     @php $d = $start->copy(); @endphp
                     @while($d <= $end)
                         @php
@@ -190,6 +200,7 @@ function initFuseSearch() {
     const table = document.getElementById('attendanceTable');
     const rows = Array.from(table.querySelectorAll('tbody tr.attendance__data-row'));
     const filterDepartment = document.getElementById('filterDepartment');
+    const filterPosition = document.getElementById('filterPosition');
     const filterName = document.getElementById('filterName');
     const resetButton = document.getElementById('resetFilters');
     const sortableHeaders = document.querySelectorAll('th[data-sort]');
@@ -226,6 +237,7 @@ function initFuseSearch() {
         // Фильтрация по имени с помощью Fuse.js
         const nameFilter = filterName.value.trim();
         const departmentFilter = filterDepartment.value;
+        const positionFilter = filterPosition.value;
         
         console.log('Поиск по:', nameFilter);
         
@@ -246,6 +258,11 @@ function initFuseSearch() {
         // Фильтруем по отделу, если выбран
         if (departmentFilter) {
             filteredData = filteredData.filter(item => item.department === departmentFilter);
+        }
+        
+        // Фильтруем по должности, если выбрана
+        if (positionFilter) {
+            filteredData = filteredData.filter(item => item.position === positionFilter);
         }
         
         // Отображаем отфильтрованные строки
@@ -326,6 +343,7 @@ function initFuseSearch() {
     
     // Привязываем обработчики событий для мгновенной фильтрации
     filterDepartment.addEventListener('change', filterAndSortTable);
+    filterPosition.addEventListener('change', filterAndSortTable);
     
     // Установка debounce для поиска по имени
     let searchTimeout;
@@ -337,6 +355,7 @@ function initFuseSearch() {
     // Сброс фильтров
     resetButton.addEventListener('click', function() {
         filterDepartment.value = '';
+        filterPosition.value = '';
         filterName.value = '';
         
         filterAndSortTable();

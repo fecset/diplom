@@ -94,8 +94,8 @@
                             @foreach($departments as $department)
                                 @if($department)
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="dept_{{ $loop->index }}" name="target_departments[]" value="{{ $department }}" {{ is_array(old('target_departments')) && in_array($department, old('target_departments')) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="dept_{{ $loop->index }}">{{ $department }}</label>
+                                    <input class="form-check-input" type="checkbox" id="dept_{{ $loop->index }}" name="target_departments[]" value="{{ $department->id }}" {{ is_array(old('target_departments')) && in_array($department->id, old('target_departments')) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="dept_{{ $loop->index }}">{{ $department->name }}</label>
                                 </div>
                                 @endif
                             @endforeach

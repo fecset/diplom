@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
+            DepartmentSeeder::class,
+            PositionSeeder::class,
             UserSeeder::class,
             NotificationSeeder::class,
         ]);

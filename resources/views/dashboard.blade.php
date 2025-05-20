@@ -24,11 +24,11 @@
                     </div>
                     <div class="profile__row">
                         <span class="profile__label">Должность:</span>
-                        <span class="profile__value">{{ $user->position ?? '—' }}</span>
+                        <span class="profile__value">{{ $user->position?->name ?? '—' }}</span>
                     </div>
                     <div class="profile__row">
                         <span class="profile__label">Отдел:</span>
-                        <span class="profile__value">{{ $user->department ?? '—' }}</span>
+                        <span class="profile__value">{{ $user->department?->name ?? '—' }}</span>
                     </div>
                     <div class="profile__row">
                         <span class="profile__label">Телефон:</span>

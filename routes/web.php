@@ -65,6 +65,7 @@ Route::middleware(['auth', 'role:hr_specialist,admin'])->prefix('hr')->name('hr.
         Route::post('personnel', [HrController::class, 'storeEmployee'])->name('personnel.store');
         Route::get('personnel/{user}/edit', [HrController::class, 'editEmployee'])->name('personnel.edit');
         Route::put('personnel/{user}', [HrController::class, 'updateEmployee'])->name('personnel.update');
+        Route::delete('personnel/{user}', [HrController::class, 'deleteEmployee'])->name('personnel.delete');
     });
     
     // Просмотр сотрудников без ограничений для HR-специалистов

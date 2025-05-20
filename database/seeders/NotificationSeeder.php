@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Notification;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Models\Department;
 
 class NotificationSeeder extends Seeder
 {
@@ -57,7 +58,7 @@ class NotificationSeeder extends Seeder
         ]);
         
         // Создаем уведомление для определенного отдела
-        $itDepartment = User::where('department', 'ИТ-отдел')->value('department');
+        $itDepartment = Department::where('name', 'ИТ-отдел')->first();
         
         if ($itDepartment) {
             Notification::create([
@@ -66,7 +67,7 @@ class NotificationSeeder extends Seeder
                 'type' => 'info',
                 'created_by' => $admin->id,
                 'is_global' => false,
-                'target_departments' => [$itDepartment],
+                'target_departments' => [$itDepartment->id],
                 'is_active' => true,
             ]);
         }

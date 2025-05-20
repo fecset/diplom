@@ -10,13 +10,78 @@ use Carbon\Carbon;
 
 class NotificationController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('role:hr_specialist,admin');
+    }
+
     /**
      * Отображает список уведомлений
      */
-    public function index()
+    public function index(Request $request)
     {
-        $notifications = Notification::orderBy('created_at', 'desc')->paginate(10);
-        return view('notifications.index', compact('notifications'));
+        $query = Notification::query();
+
+        // Фильтрация по типу
+        if ($request->has('type') && in_array($request->type, ['info', 'warning', 'important'])) {
+            $query->where('type', $request->type);
+        }
+
+        // Фильтрация по статусу
+        if ($request->has('status')) {
+            if ($request->status === 'active') {
+                $query->where(function($q) {
+                    $q->whereNull('end_date')
+                      ->orWhere('end_date', '>', now());
+                })->where(function($q) {
+                    $q->whereNull('start_date')
+                      ->orWhere('start_date', '<=', now());
+                });
+            } elseif ($request->status === 'inactive') {
+                $query->where(function($q) {
+                    $q->where('end_date', '<', now())
+                      ->orWhere('start_date', '>', now());
+                });
+            }
+        }
+
+        // Фильтрация по глобальности
+        if ($request->has('is_global')) {
+            $query->where('is_global', $request->is_global === 'true');
+        }
+
+        // Фильтрация по заголовку
+        if ($request->has('title') && $request->title) {
+            $query->where('title', 'like', '%' . $request->title . '%');
+        }
+
+        // Сортировка
+        $sortField = $request->get('sort', 'created_at');
+        $sortOrder = $request->get('order', 'desc');
+        $allowedSortFields = ['title', 'type', 'created_at', 'start_date', 'end_date'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'created_at';
+        }
+        $query->orderBy($sortField, $sortOrder);
+
+        // Определяем, есть ли фильтры/поиск/сортировка
+        $hasFilters = $request->filled('type') || $request->filled('status') || $request->filled('is_global') || $request->filled('title');
+        $isDefaultSort = ($sortField === 'created_at' && $sortOrder === 'desc');
+        $showAll = $hasFilters || !$isDefaultSort;
+
+        if ($showAll && $request->has('page')) {
+            // Удаляем параметр page из URL и делаем редирект
+            $params = $request->except('page');
+            return redirect()->route('notifications.index', $params);
+        }
+        if ($showAll) {
+            $notifications = $query->get();
+        } else {
+            $notifications = $query->paginate(8)->withQueryString();
+        }
+
+        return view('notifications.index', compact('notifications', 'sortField', 'sortOrder', 'showAll'));
     }
 
     /**

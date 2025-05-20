@@ -57,7 +57,7 @@
                 <select id="department" name="department" class="hr-leave-requests__filter-select">
                     <option value="">Все отделы</option>
                     @foreach($departments as $department)
-                        <option value="{{ $department }}" {{ request('department') == $department ? 'selected' : '' }}>{{ $department }}</option>
+                        <option value="{{ $department->id }}" {{ request('department') == $department->id ? 'selected' : '' }}>{{ $department->name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -112,7 +112,7 @@
                                     {{ $request->user->name }}
                                 </a>
                             </td>
-                            <td>{{ $request->user->department }}</td>
+                            <td>{{ $request->user->department?->name ?? '—' }}</td>
                             <td>
                                 @if($request->type === 'vacation')
                                     <span class="hr-leave-requests__type hr-leave-requests__type--vacation">Отпуск</span>

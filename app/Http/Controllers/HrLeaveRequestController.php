@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\LeaveRequest;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Models\Notification;
+use App\Models\Department;
 
 class HrLeaveRequestController extends Controller
 {
@@ -61,8 +63,8 @@ class HrLeaveRequestController extends Controller
         
         $requests = $query->paginate(20);
         
-        // Получаем список всех департаментов для фильтра
-        $departments = User::select('department')->distinct()->pluck('department')->toArray();
+        // Получаем список всех отделов для фильтра через связь с таблицей departments
+        $departments = Department::orderBy('name')->get();
         
         return view('hr.leave_requests.index', compact('requests', 'departments'));
     }
@@ -93,9 +95,26 @@ class HrLeaveRequestController extends Controller
                 ->with('error', 'Вы не можете одобрять или отклонять свои собственные заявки. Это может сделать только администратор.');
         }
 
+        $oldStatus = $leaveRequest->status;
         $leaveRequest->status = $request->status;
         $leaveRequest->hr_comment = $request->hr_comment;
         $leaveRequest->save();
+
+        // Создаем уведомление о изменении статуса заявки
+        $notification = new Notification();
+        $notification->title = 'Обновление статуса заявки';
+        $notification->message = sprintf(
+            'Ваша заявка на %s %s %s. %s',
+            $leaveRequest->type === 'vacation' ? 'отпуск' : 'больничный',
+            $leaveRequest->date_start,
+            $request->status === 'approved' ? 'одобрена' : 'отклонена',
+            $request->hr_comment ? 'Комментарий HR: ' . $request->hr_comment : ''
+        );
+        $notification->type = $request->status === 'approved' ? 'info' : 'warning';
+        $notification->created_by = $currentUser->id;
+        $notification->is_global = false;
+        $notification->target_users = [$leaveRequest->user_id];
+        $notification->save();
 
         return redirect()->route('hr.leave_requests.index')
             ->with('success', 'Статус заявки успешно обновлен.');

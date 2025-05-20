@@ -36,27 +36,23 @@
             
             <div class="form-row">
                 <div class="form-group form-group--half">
-                    <label for="department" class="form-label">Отдел*:</label>
-                    <input type="text" name="department" id="department" class="form-input" 
-                           value="{{ old('department', $user->department) }}" required
-                           list="departments-list">
-                    <datalist id="departments-list">
+                    <label for="department_id" class="form-label">Отдел*:</label>
+                    <select name="department_id" id="department_id" class="form-select" required>
+                        <option value="">Выберите отдел</option>
                         @foreach($departments as $department)
-                            <option value="{{ $department }}">
+                            <option value="{{ $department->id }}" @selected(old('department_id', $user->department_id) == $department->id)>{{ $department->name }}</option>
                         @endforeach
-                    </datalist>
+                    </select>
                 </div>
                 
                 <div class="form-group form-group--half">
-                    <label for="position" class="form-label">Должность*:</label>
-                    <input type="text" name="position" id="position" class="form-input" 
-                           value="{{ old('position', $user->position) }}" required
-                           list="positions-list">
-                    <datalist id="positions-list">
+                    <label for="position_id" class="form-label">Должность*:</label>
+                    <select name="position_id" id="position_id" class="form-select" required>
+                        <option value="">Выберите должность</option>
                         @foreach($positions as $position)
-                            <option value="{{ $position }}">
+                            <option value="{{ $position->id }}" @selected(old('position_id', $user->position_id) == $position->id)>{{ $position->name }}</option>
                         @endforeach
-                    </datalist>
+                    </select>
                 </div>
             </div>
             

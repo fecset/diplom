@@ -21,11 +21,24 @@
                 <label for="filterDepartment" class="personnel__filter-label">Отдел:</label>
                 <select id="filterDepartment" class="personnel__filter-select">
                     <option value="">Все отделы</option>
-                    @php 
-                        $departments = $employees->pluck('department')->unique()->sort()->values();
+                    @php
+                        $departments = $employees->pluck('department')->filter()->unique('id')->sortBy('name')->values();
                     @endphp
                     @foreach($departments as $department)
-                        <option value="{{ $department }}">{{ $department }}</option>
+                        <option value="{{ $department->id }}">{{ $department->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <div class="personnel__filter-group">
+                <label for="filterPosition" class="personnel__filter-label">Должность:</label>
+                <select id="filterPosition" class="personnel__filter-select">
+                    <option value="">Все должности</option>
+                    @php
+                        $positions = $employees->pluck('position')->filter()->unique('id')->sortBy('name')->values();
+                    @endphp
+                    @foreach($positions as $position)
+                        <option value="{{ $position->id }}">{{ $position->name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -58,44 +71,57 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($employees as $employee)
-                    <tr class="personnel__row" 
-                        data-name="{{ strtolower($employee->name) }}" 
-                        data-position="{{ strtolower($employee->position) }}" 
-                        data-department="{{ $employee->department }}"
-                        data-role="{{ $employee->role }}"
-                        data-hired_at="{{ $employee->hired_at ? $employee->hired_at : '9999-12-31' }}">
-                        <td><a href="{{ route('hr.personnel.show', $employee) }}" class="personnel__employee-link">{{ $employee->name }}</a></td>
-                        <td>{{ $employee->position }}</td>
-                        <td>{{ $employee->department }}</td>
-                        <td>{{ $employee->username }}</td>
-                        <td>{{ $employee->phone_number ?? '—' }}</td>
-                        <td>{{ $employee->email ?? '—' }}</td>
+                    @foreach($employees as $user)
+                    <tr class="personnel__data-row"
+                        data-name="{{ strtolower($user->name) }}"
+                        data-department="{{ $user->department?->id }}"
+                        data-position="{{ $user->position?->id }}">
+                        <td>{{ $user->name }}</td>
+                        <td>{{ $user->position?->name ?? '—' }}</td>
+                        <td>{{ $user->department?->name ?? '—' }}</td>
+                        <td>{{ $user->username }}</td>
+                        <td>{{ $user->phone_number ?? '—' }}</td>
+                        <td>{{ $user->email ?? '—' }}</td>
                         <td>
-                            @if($employee->role === 'admin')
+                            @if($user->role === 'admin')
                                 <span class="personnel__role personnel__role--admin">Администратор</span>
-                            @elseif($employee->role === 'hr_specialist')
+                            @elseif($user->role === 'hr_specialist')
                                 <span class="personnel__role personnel__role--hr">HR-специалист</span>
                             @else
                                 <span class="personnel__role personnel__role--employee">Сотрудник</span>
                             @endif
                         </td>
-                        <td>{{ $employee->hired_at ? \Carbon\Carbon::parse($employee->hired_at)->format('d.m.Y') : '—' }}</td>
+                        <td>{{ $user->hired_at ? \Carbon\Carbon::parse($user->hired_at)->format('d.m.Y') : '—' }}</td>
                         <td>
                             <div class="personnel__actions">
-                                <a href="{{ route('hr.personnel.show', $employee) }}" class="personnel__action-btn" title="Просмотр">
+                                <a href="{{ route('hr.personnel.show', $user) }}" class="personnel__action-btn" title="Просмотр">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                         <circle cx="12" cy="12" r="3"></circle>
                                     </svg>
                                 </a>
-                                @if(!(Auth::user()->isHrSpecialist() && $employee->isAdmin()))
-                                <a href="{{ route('hr.personnel.edit', $employee) }}" class="personnel__action-btn" title="Редактировать">
+                                @if(!(Auth::user()->isHrSpecialist() && $user->isAdmin()))
+                                <a href="{{ route('hr.personnel.edit', $user) }}" class="personnel__action-btn" title="Редактировать">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                     </svg>
                                 </a>
+                                @endif
+                                @if(auth()->user()->isAdmin() || auth()->user()->isHrSpecialist())
+                                    <form action="{{ route('hr.personnel.delete', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить этого сотрудника?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="personnel__action-btn personnel__action-btn--danger" title="Удалить">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                              <path d="M3 6h18"/>
+                                              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                                              <line x1="10" y1="11" x2="10" y2="17"/>
+                                              <line x1="14" y1="11" x2="14" y2="17"/>
+                                            </svg>
+                                        </button>
+                                    </form>
                                 @endif
                             </div>
                         </td>
@@ -156,8 +182,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function initPersonnelFiltering() {
     const table = document.getElementById('personnelTable');
-    const rows = Array.from(table.querySelectorAll('tbody tr.personnel__row'));
+    const rows = Array.from(table.querySelectorAll('tbody tr.personnel__data-row'));
     const filterDepartment = document.getElementById('filterDepartment');
+    const filterPosition = document.getElementById('filterPosition');
     const filterName = document.getElementById('filterName');
     const resetButton = document.getElementById('resetFilters');
     const sortableHeaders = document.querySelectorAll('th[data-sort]');
@@ -196,10 +223,11 @@ function initPersonnelFiltering() {
         // Фильтрация
         const nameFilter = filterName.value.trim().toLowerCase();
         const departmentFilter = filterDepartment.value;
+        const positionFilter = filterPosition.value;
         
         // Управление пагинацией - скрываем при активном фильтре
         const paginationContainer = document.getElementById('paginationContainer');
-        if (nameFilter || departmentFilter) {
+        if (nameFilter || departmentFilter || positionFilter) {
             if (paginationContainer) paginationContainer.style.display = 'none';
         } else {
             if (paginationContainer) paginationContainer.style.display = '';
@@ -222,6 +250,11 @@ function initPersonnelFiltering() {
         // Фильтруем по отделу, если выбран
         if (departmentFilter) {
             filteredData = filteredData.filter(item => item.department === departmentFilter);
+        }
+        
+        // Фильтруем по должности, если выбрана
+        if (positionFilter) {
+            filteredData = filteredData.filter(item => item.position === positionFilter);
         }
         
         // Отображаем отфильтрованные строки
@@ -323,6 +356,7 @@ function initPersonnelFiltering() {
     
     // Привязываем обработчики событий
     filterDepartment.addEventListener('change', filterAndSortTable);
+    filterPosition.addEventListener('change', filterAndSortTable);
     
     // Установка debounce для поиска по имени
     let searchTimeout;
@@ -334,6 +368,7 @@ function initPersonnelFiltering() {
     // Сброс фильтров
     resetButton.addEventListener('click', function() {
         filterDepartment.value = '';
+        filterPosition.value = '';
         filterName.value = '';
         
         filterAndSortTable();
@@ -621,6 +656,7 @@ function setupPaginationLinks() {
 .personnel__action-btn svg {
     width: 18px;
     height: 18px;
+    display: inline-block;
 }
 
 .personnel__employee-link {
@@ -706,6 +742,39 @@ function setupPaginationLinks() {
     border-color: #e0e0e0;
     box-shadow: none;
     opacity: 0.7;
+}
+
+.btn--danger {
+    background-color: #F44336 !important;
+    color: #fff !important;
+    border: none;
+    transition: background 0.2s, color 0.2s;
+}
+.btn--danger:hover, .btn--danger:focus {
+    background-color: #d32f2f !important;
+    color: #fff !important;
+}
+
+.personnel__action-btn--danger {
+    background-color: #F44336;
+    color: #fff;
+    border: 1px solid #F44336;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    padding: 0; /* если нужно */
+    width: 36px; /* как у других action-кнопок */
+    height: 36px;
+    line-height: 40px; /* для вертикального выравнивания */
+}
+.personnel__action-btn--danger:hover, .personnel__action-btn--danger:focus {
+    background-color: #d32f2f;
+    color: #fff;
+    border-color: #d32f2f;
+}
+
+.personnel__action-btn--danger svg {
+    stroke: #fff;
 }
 </style>
 @endsection 

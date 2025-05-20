@@ -17,7 +17,12 @@ class AttendanceController extends Controller
         $start = Carbon::parse($date.'-01')->startOfMonth();
         $end = (clone $start)->endOfMonth();
 
-        $users = User::orderBy('department')->orderBy('name')->get();
+        $users = User::with('department')
+            ->join('departments', 'users.department_id', '=', 'departments.id')
+            ->orderBy('departments.name')
+            ->orderBy('users.name')
+            ->select('users.*')
+            ->get();
         
         // Устанавливаем явку на текущий день для всех пользователей, если нет записи
         $today = Carbon::today()->format('Y-m-d');
