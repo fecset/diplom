@@ -27,11 +27,13 @@ class LeaveRequestController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:vacation,sick_leave',
+            'type' => 'required|in:vacation,sick_leave,business_trip',
             'date_start' => 'required|date',
             'date_end' => 'required|date|after_or_equal:date_start',
             'reason' => 'nullable|string|max:255',
             'document' => 'nullable|file|mimes:jpeg,png,pdf|max:5120',
+            'destination' => 'nullable|string|max:255',
+            'purpose' => 'nullable|string|max:255',
         ], [
             'type.required' => 'Выберите тип заявки.',
             'date_start.required' => 'Укажите дату начала.',
@@ -41,8 +43,9 @@ class LeaveRequestController extends Controller
             'document.max' => 'Размер файла не должен превышать 5 МБ.',
         ]);
 
-        $data = $request->only(['type', 'date_start', 'date_end', 'reason']);
+        $data = $request->only(['type', 'date_start', 'date_end', 'reason', 'destination', 'purpose']);
         $data['user_id'] = Auth::id();
+        $data['status'] = 'new';
         
         // Обработка загрузки документа
         if ($request->hasFile('document')) {
@@ -54,8 +57,15 @@ class LeaveRequestController extends Controller
         
         LeaveRequest::create($data);
 
+        $successMessage = match($request->type) {
+            'vacation' => 'Заявка на отпуск успешно создана.',
+            'sick_leave' => 'Заявка на больничный успешно создана.',
+            'business_trip' => 'Заявка на командировку успешно создана.',
+            default => 'Заявка успешно создана.'
+        };
+
         return redirect()->route('leave_requests.index')
-            ->with('success', $request->type === 'vacation' ? 'Заявка на отпуск успешно создана.' : 'Заявка на больничный успешно создана.');
+            ->with('success', $successMessage);
     }
 
     // Заявки только на отпуск
@@ -75,6 +85,16 @@ class LeaveRequestController extends Controller
             ->where('type', 'sick_leave')
             ->orderByDesc('created_at')->get();
         $type = 'sick_leave';
+        return view('leave_requests.index', compact('requests', 'type'));
+    }
+
+    // Заявки только на командировку
+    public function businessTrip()
+    {
+        $requests = LeaveRequest::where('user_id', Auth::id())
+            ->where('type', 'business_trip')
+            ->orderByDesc('created_at')->get();
+        $type = 'business_trip';
         return view('leave_requests.index', compact('requests', 'type'));
     }
 }

@@ -24,6 +24,7 @@ $special_container = true;
 
     <!-- Фильтры -->
     <div class="attendance__filters">
+        @if(Auth::user()->isAdmin() || Auth::user()->isHrSpecialist())
         <div class="attendance__filter-group">
             <label for="filterDepartment" class="attendance__filter-label">Отдел:</label>
             <select id="filterDepartment" class="attendance__filter-select">
@@ -36,6 +37,7 @@ $special_container = true;
                 @endforeach
             </select>
         </div>
+        @endif
         <div class="attendance__filter-group">
             <label for="filterPosition" class="attendance__filter-label">Должность:</label>
             <select id="filterPosition" class="attendance__filter-select">
@@ -236,10 +238,8 @@ function initFuseSearch() {
     function filterAndSortTable() {
         // Фильтрация по имени с помощью Fuse.js
         const nameFilter = filterName.value.trim();
-        const departmentFilter = filterDepartment.value;
+        const departmentFilter = filterDepartment ? filterDepartment.value : null;
         const positionFilter = filterPosition.value;
-        
-        console.log('Поиск по:', nameFilter);
         
         // Скрываем все строки перед фильтрацией
         rows.forEach(row => {
@@ -255,8 +255,8 @@ function initFuseSearch() {
             filteredData = searchResults.map(result => result.item);
         }
         
-        // Фильтруем по отделу, если выбран
-        if (departmentFilter) {
+        // Фильтруем по отделу, если выбран и фильтр доступен
+        if (departmentFilter && filterDepartment) {
             filteredData = filteredData.filter(item => item.department === departmentFilter);
         }
         
@@ -267,12 +267,6 @@ function initFuseSearch() {
         
         // Отображаем отфильтрованные строки
         const visibleRows = filteredData.map(item => item.element);
-        
-        console.log('Найдено строк:', visibleRows.length);
-        
-        visibleRows.forEach(row => {
-            row.style.display = '';
-        });
         
         // Сортируем видимые строки
         visibleRows.sort((a, b) => {
@@ -288,7 +282,10 @@ function initFuseSearch() {
         
         // Переупорядочиваем строки в таблице
         const tbody = table.querySelector('tbody');
-        visibleRows.forEach(row => tbody.appendChild(row));
+        visibleRows.forEach(row => {
+            row.style.display = ''; // Показываем строку
+            tbody.appendChild(row);
+        });
         
         // Обновляем индикаторы сортировки
         updateSortIcons();
@@ -342,7 +339,9 @@ function initFuseSearch() {
     }
     
     // Привязываем обработчики событий для мгновенной фильтрации
+    if (filterDepartment) {
     filterDepartment.addEventListener('change', filterAndSortTable);
+    }
     filterPosition.addEventListener('change', filterAndSortTable);
     
     // Установка debounce для поиска по имени
@@ -354,20 +353,16 @@ function initFuseSearch() {
     
     // Сброс фильтров
     resetButton.addEventListener('click', function() {
+        if (filterDepartment) {
         filterDepartment.value = '';
+        }
         filterPosition.value = '';
         filterName.value = '';
         
         filterAndSortTable();
-        
-        // Выводим сообщение о сбросе фильтров
-        console.log('Фильтры сброшены');
     });
     
-    // Добавляем вывод информации о первоначальном количестве строк
-    console.log('Всего строк в таблице:', rows.length);
-    
-    // Запускаем первичную сортировку
+    // Инициализация таблицы при загрузке страницы
     filterAndSortTable();
 }
 </script>

@@ -270,11 +270,24 @@ function initNotificationsFiltering() {
             if (window.notificationsCurrentSort.field === 'created_at' || 
                 window.notificationsCurrentSort.field === 'start_date' || 
                 window.notificationsCurrentSort.field === 'end_date') {
-                aValue = aValue ? new Date(aValue) : new Date(0);
-                bValue = bValue ? new Date(bValue) : new Date(0);
                 
+                // Обрабатываем пустую строку или null как null перед созданием Date
+                aValue = (aValue === null || aValue === '') ? null : aValue;
+                bValue = (bValue === null || bValue === '') ? null : bValue;
+
+                // Определяем даты для сравнения, обрабатывая null/пустые значения
+                // При asc сортировке null идет первым (считаем его очень старой датой)
+                // При desc сортировке null идет последним (считаем его очень новой датой)
+                const dateA = aValue ? new Date(aValue).getTime() : (window.notificationsCurrentSort.order === 'asc' ? -Infinity : Infinity);
+                const dateB = bValue ? new Date(bValue).getTime() : (window.notificationsCurrentSort.order === 'asc' ? -Infinity : Infinity);
+                
+                // Если даты невалидны, помещаем их в конец (для asc) или начало (для desc)
+                if (isNaN(dateA) && isNaN(dateB)) return 0;
+                if (isNaN(dateA)) return window.notificationsCurrentSort.order === 'asc' ? 1 : -1;
+                if (isNaN(dateB)) return window.notificationsCurrentSort.order === 'asc' ? -1 : 1;
+
                 return window.notificationsCurrentSort.order === 'asc' ? 
-                    aValue - bValue : bValue - aValue;
+                    dateA - dateB : dateB - dateA;
             }
             
             return window.notificationsCurrentSort.order === 'asc' ? 

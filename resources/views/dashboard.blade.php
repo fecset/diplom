@@ -59,6 +59,10 @@
                         </span>
                     </div>
                 </div>
+
+                <div class="profile__actions">
+                    <button class="btn btn--secondary" onclick="window.location.href='{{ route('profile.downloadCertificate') }}'">Скачать справку с места работы</button>
+                </div>
             </div>
         </div>
         
@@ -114,7 +118,8 @@
                 </div>
                 <div class="vacation-info__buttons">
                     <a href="{{ route('leave_requests.vacation.create') }}" class="btn btn--primary">Новая заявка на отпуск</a>
-                    <a href="{{ route('leave_requests.sick_leave.create') }}" class="btn btn--secondary">Новая заявка на больничный</a>
+                    <a href="{{ route('leave_requests.sick_leave.create') }}" class="btn btn--primary">Новая заявка на больничный</a>
+                    <a href="{{ route('leave_requests.business_trip.create') }}" class="btn btn--primary">Новая заявка на командировку</a>
                 </div>
             </div>
         </div>
@@ -413,6 +418,7 @@
 .profile__value {
     flex: 1;
     color: var(--color-black);
+    word-break: break-word;
 }
 
 /* Стили для статистики посещаемости */

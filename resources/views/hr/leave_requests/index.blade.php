@@ -35,6 +35,12 @@
                 </svg>
                 Больничные
             </a>
+            <a href="{{ route('hr.leave_requests.business_trips') }}" class="hr-leave-requests__tab {{ request('type') === 'business_trip' ? 'hr-leave-requests__tab--active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 22v-4a4.97 4.97 0 0 0-1-3c1.09-.53 2-1.82 2-3a4.96 4.96 0 0 0-1.46-3.42V7c0-.66-.5-1-1-1H9c-.5 0-1 .34-1 1v.08A5 5 0 0 0 6 7c0 2.14 1.2 3.5 2 4l-1 3.5v4c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2z"></path>
+                </svg>
+                Командировки
+            </a>
         </div>
     </div>
 
@@ -116,6 +122,8 @@
                             <td>
                                 @if($request->type === 'vacation')
                                     <span class="hr-leave-requests__type hr-leave-requests__type--vacation">Отпуск</span>
+                                @elseif($request->type === 'business_trip')
+                                    <span class="hr-leave-requests__type hr-leave-requests__type--business_trip">Командировка</span>
                                 @else
                                     <span class="hr-leave-requests__type hr-leave-requests__type--sick">Больничный</span>
                                 @endif
@@ -632,6 +640,10 @@ function debounce(func, wait) {
 
 .hr-leave-requests__type--vacation {
     background-color: #2196F3;
+}
+
+.hr-leave-requests__type--business_trip {
+    background-color: #9C27B0;
 }
 
 .hr-leave-requests__type--sick {

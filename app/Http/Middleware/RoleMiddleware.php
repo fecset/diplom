@@ -26,6 +26,9 @@ class RoleMiddleware
 
         $user = Auth::user();
 
+        // Временно добавим логирование роли пользователя
+        \Illuminate\Support\Facades\Log::info('Checking role for user ID: ' . $user->id . ' with role: ' . $user->role);
+
         // Проверяем, есть ли у пользователя хотя бы одна из требуемых ролей
         foreach ($roles as $role) {
             if ($role === 'admin' && $user->isAdmin()) {
@@ -35,7 +38,7 @@ class RoleMiddleware
                 return $next($request);
             }
             if ($role === 'employee' && $user->isEmployee()) {
-        return $next($request);
+                return $next($request);
             }
         }
 

@@ -1,36 +1,46 @@
 @extends('layouts.app')
-@section('title', isset($type) && $type === 'sick_leave' ? 'Мои больничные' : 'Мои отпуска')
+@section('title', match(isset($type) ? $type : null) {
+    'sick_leave' => 'Мои больничные',
+    'business_trip' => 'Мои командировки',
+    default => 'Мои заявки',
+})
 
 @section('content')
 <div class="requests">
     <div class="requests__header">
         <h2 class="requests__title">
-            @if(isset($type) && $type === 'sick_leave')
-                Мои заявки на больничный
+            @if(isset($type))
+                @if($type === 'sick_leave')
+                    Мои заявки на больничный
+                @elseif($type === 'business_trip')
+                    Мои заявки на командировку
+                @else
+                    Мои заявки на отпуск
+                @endif
             @else
-                Мои заявки на отпуск
+                Все мои заявки
             @endif
         </h2>
         <div class="requests__actions">
-            @if(!isset($type) || $type === 'vacation')
-                <a href="{{ route('leave_requests.create', ['type' => 'vacation']) }}" class="requests__btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1.5"></path>
-                        <path d="M12 12h9"></path>
-                        <path d="M16 16l5-5"></path>
-                        <path d="M16 8l5 5"></path>
-                    </svg>
-                    Подать заявку на отпуск
-                </a>
-            @endif
-            @if(!isset($type) || $type === 'sick_leave')
-                <a href="{{ route('leave_requests.create', ['type' => 'sick_leave']) }}" class="requests__btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                    </svg>
-                    Подать заявку на больничный
-                </a>
-            @endif
+            <a href="{{ route('leave_requests.create', ['type' => 'vacation']) }}" class="requests__btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1.5"></path>
+                    <path d="M12 12h9"></path>
+                    <path d="M16 16l5-5"></path>
+                    <path d="M16 8l5 5"></path>
+                </svg>
+                Подать заявку на отпуск
+            </a>
+            <a href="{{ route('leave_requests.create', ['type' => 'sick_leave']) }}" class="requests__btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>
+                Подать заявку на больничный
+            </a>
+             <a href="{{ route('leave_requests.create', ['type' => 'business_trip']) }}" class="requests__btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.97 4.97 0 0 0-1-3c1.09-.53 2-1.82 2-3a4.96 4.96 0 0 0-1.46-3.42V7c0-.66-.5-1-1-1H9c-.5 0-1 .34-1 1v.08A5 5 0 0 0 6 7c0 2.14 1.2 3.5 2 4l-1 3.5v4c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2z"></path></svg>
+                Подать заявку на командировку
+            </a>
         </div>
     </div>
 
@@ -58,6 +68,10 @@
             </svg>
             Больничные
         </a>
+        <a href="{{ route('leave_requests.business_trip') }}" class="requests__tab {{ isset($type) && $type === 'business_trip' ? 'requests__tab--active' : '' }}">
+             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.97 4.97 0 0 0-1-3c1.09-.53 2-1.82 2-3a4.96 4.96 0 0 0-1.46-3.42V7c0-.66-.5-1-1-1H9c-.5 0-1 .34-1 1v.08A5 5 0 0 0 6 7c0 2.14 1.2 3.5 2 4l-1 3.5v4c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2z"></path></svg>
+             Командировки
+        </a>
     </div>
     
     <div class="requests__content">
@@ -69,8 +83,13 @@
                             <th>№</th>
                             <th>Тип</th>
                             <th>Период</th>
-                            <th>Дней</th>
-                            <th>Причина</th>
+                            @if(isset($type) && $type === 'business_trip')
+                                <th>Место</th>
+                                <th>Цель</th>
+                            @else
+                                <th>Дней</th>
+                                <th>Причина</th>
+                            @endif
                             <th>Статус</th>
                             <th>Комментарий HR</th>
                             <th>Дата подачи</th>
@@ -84,13 +103,20 @@
                             <td>
                                 @if($req->type === 'vacation')
                                     <span class="requests__type requests__type--vacation">Отпуск</span>
-                                @else
+                                @elseif($req->type === 'sick_leave')
                                     <span class="requests__type requests__type--sick">Больничный</span>
+                                @elseif($req->type === 'business_trip')
+                                     <span class="requests__type requests__type--business_trip">Командировка</span>
                                 @endif
                             </td>
                             <td>{{ \Carbon\Carbon::parse($req->date_start)->format('d.m.Y') }} — {{ \Carbon\Carbon::parse($req->date_end)->format('d.m.Y') }}</td>
-                            <td>{{ \Carbon\Carbon::parse($req->date_start)->diffInDays(\Carbon\Carbon::parse($req->date_end)) + 1 }}</td>
-                            <td>{{ $req->reason ?? '—' }}</td>
+                             @if(isset($type) && $type === 'business_trip')
+                                <td>{{ $req->destination ?? '—' }}</td>
+                                <td>{{ $req->purpose ?? '—' }}</td>
+                            @else
+                                <td>{{ \Carbon\Carbon::parse($req->date_start)->diffInDays(\Carbon\Carbon::parse($req->date_end)) + 1 }}</td>
+                                <td>{{ $req->reason ?? '—' }}</td>
+                            @endif
                             <td>
                                 @if($req->status === 'new')
                                     <span class="requests__status requests__status--new">
@@ -325,6 +351,10 @@
     background-color: #FF9800;
 }
 
+.requests__type--business_trip {
+    background-color: #9C27B0;
+}
+
 .requests__status {
     display: flex;
     align-items: center;
@@ -430,6 +460,15 @@
         width: 100%;
         justify-content: center;
     }
+}
+
+/* Стили для иконок вкладок */
+.requests__tab svg {
+    color: #777;
+}
+
+.requests__tab--active svg {
+    color: white;
 }
 </style>
 @endsection 

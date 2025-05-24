@@ -29,7 +29,7 @@ class HrLeaveRequestController extends Controller
         $query = LeaveRequest::with('user')->orderBy('created_at', 'desc');
         
         // Фильтрация по типу заявки
-        if ($request->has('type') && in_array($request->type, ['vacation', 'sick_leave'])) {
+        if ($request->has('type') && in_array($request->type, ['vacation', 'sick_leave', 'business_trip'])) {
             $query->where('type', $request->type);
         }
         
@@ -74,6 +74,7 @@ class HrLeaveRequestController extends Controller
      */
     public function show(LeaveRequest $leaveRequest)
     {
+        $leaveRequest->load(['user.position', 'user.department']);
         return view('hr.leave_requests.show', compact('leaveRequest'));
     }
 
@@ -105,7 +106,7 @@ class HrLeaveRequestController extends Controller
         $notification->title = 'Обновление статуса заявки';
         $notification->message = sprintf(
             'Ваша заявка на %s %s %s. %s',
-            $leaveRequest->type === 'vacation' ? 'отпуск' : 'больничный',
+            $leaveRequest->type === 'vacation' ? 'отпуск' : ($leaveRequest->type === 'sick_leave' ? 'больничный' : 'командировка'),
             $leaveRequest->date_start,
             $request->status === 'approved' ? 'одобрена' : 'отклонена',
             $request->hr_comment ? 'Комментарий HR: ' . $request->hr_comment : ''
@@ -138,6 +139,15 @@ class HrLeaveRequestController extends Controller
         return $this->index($request);
     }
     
+    /**
+     * Показать страницу с фильтром только по заявкам на командировку
+     */
+    public function businessTrips(Request $request)
+    {
+        $request->merge(['type' => 'business_trip']);
+        return $this->index($request);
+    }
+
     /**
      * Показать страницу с фильтром только по новым заявкам
      */

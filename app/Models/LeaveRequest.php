@@ -20,6 +20,8 @@ class LeaveRequest extends Model
         'date_start',
         'date_end',
         'reason',
+        'destination',
+        'purpose',
         'status',
         'hr_comment',
         'document_path'

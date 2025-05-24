@@ -13,7 +13,7 @@ class NotificationController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('role:hr_specialist,admin');
+        $this->middleware('role:hr_specialist,admin')->except(['getUserNotifications', 'markAsRead']);
     }
 
     /**
@@ -89,11 +89,7 @@ class NotificationController extends Controller
      */
     public function create()
     {
-        $departments = User::select('department')
-                         ->distinct()
-                         ->pluck('department')
-                         ->sort()
-                         ->toArray();
+        $departments = \App\Models\Department::orderBy('name')->get();
                          
         return view('notifications.create', compact('departments'));
     }
@@ -155,11 +151,7 @@ class NotificationController extends Controller
      */
     public function edit(Notification $notification)
     {
-        $departments = User::select('department')
-                         ->distinct()
-                         ->pluck('department')
-                         ->sort()
-                         ->toArray();
+        $departments = \App\Models\Department::orderBy('name')->get();
                          
         return view('notifications.edit', compact('notification', 'departments'));
     }

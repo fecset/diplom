@@ -1402,3 +1402,40 @@ body.menu-open {
         padding: calc(var(--spacing-unit) * 1);
     }
 } 
+
+.leave-request-card__type--business_trip {
+    background-color: #9C27B0;
+}
+
+.attendance__status--business_trip {
+    background: #e1bee7;
+    color: #4a148c;
+}
+
+.attendance__cell--business_trip {
+    background-color: rgba(225, 190, 231, 0.45) !important;
+}
+
+/* Стили для кнопок в личном кабинете */
+.vacation-info__buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.vacation-info__buttons .btn {
+    align-self: stretch;
+    text-align: center;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.btn--business-trip {
+    background-color: #9C27B0;
+    color: white;
+}
+
+.btn--business-trip:hover {
+    background-color: #7B1FA2;
+} 

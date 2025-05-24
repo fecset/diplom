@@ -17,12 +17,18 @@ class AttendanceController extends Controller
         $start = Carbon::parse($date.'-01')->startOfMonth();
         $end = (clone $start)->endOfMonth();
 
-        $users = User::with('department')
+        $query = User::with('department')
             ->join('departments', 'users.department_id', '=', 'departments.id')
             ->orderBy('departments.name')
             ->orderBy('users.name')
-            ->select('users.*')
-            ->get();
+            ->select('users.*');
+
+        // Если пользователь не админ и не HR, показываем только сотрудников его отдела
+        if (!Auth::user()->isAdmin() && !Auth::user()->isHrSpecialist()) {
+            $query->where('users.department_id', Auth::user()->department_id);
+        }
+        
+        $users = $query->get();
         
         // Устанавливаем явку на текущий день для всех пользователей, если нет записи
         $today = Carbon::today()->format('Y-m-d');

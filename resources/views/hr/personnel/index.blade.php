@@ -75,7 +75,9 @@
                     <tr class="personnel__data-row"
                         data-name="{{ strtolower($user->name) }}"
                         data-department="{{ $user->department?->id }}"
-                        data-position="{{ $user->position?->id }}">
+                        data-position="{{ $user->position?->id }}"
+                        data-role="{{ $user->role }}"
+                        data-hired_at="{{ $user->hired_at }}">
                         <td>{{ $user->name }}</td>
                         <td>{{ $user->position?->name ?? '—' }}</td>
                         <td>{{ $user->department?->name ?? '—' }}</td>

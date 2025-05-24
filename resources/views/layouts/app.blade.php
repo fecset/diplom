@@ -12,6 +12,8 @@
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
 
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
+    
+    @stack('styles')
 
 </head>
 <body>
@@ -109,6 +111,8 @@
         </main>
         @endauth
     </div>
+    
+    @stack('scripts')
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {

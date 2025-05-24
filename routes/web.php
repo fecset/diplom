@@ -9,6 +9,11 @@ use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\HrLeaveRequestController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\PositionController;
+use App\Http\Controllers\AdminAnalyticsController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,7 +50,17 @@ Route::middleware(['auth', 'role:employee,hr_specialist,admin'])->group(function
     // Добавляем специальные маршруты для создания заявок
     Route::get('leave_requests/vacation/create', [LeaveRequestController::class, 'create'])->defaults('type', 'vacation')->name('leave_requests.vacation.create');
     Route::get('leave_requests/sick_leave/create', [LeaveRequestController::class, 'create'])->defaults('type', 'sick_leave')->name('leave_requests.sick_leave.create');
+    Route::get('leave_requests/business_trip/create', [LeaveRequestController::class, 'create'])->defaults('type', 'business_trip')->name('leave_requests.business_trip.create');
+    Route::get('leave_requests/business_trip', [LeaveRequestController::class, 'businessTrip'])->name('leave_requests.business_trip');
     
+    // Маршруты профиля пользователя
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Маршрут для скачивания справки с места работы
+    Route::get('/profile/download-certificate', [App\Http\Controllers\ProfileController::class, 'downloadCertificate'])->name('profile.downloadCertificate');
+
     // Другие маршруты личного кабинета...
 });
 Route::get('attendance', [AttendanceController::class, 'index'])->name('hr.attendance.index');
@@ -75,6 +90,7 @@ Route::middleware(['auth', 'role:hr_specialist,admin'])->prefix('hr')->name('hr.
     Route::get('leave-requests', [HrLeaveRequestController::class, 'index'])->name('leave_requests.index');
     Route::get('leave-requests/vacations', [HrLeaveRequestController::class, 'vacations'])->name('leave_requests.vacations');
     Route::get('leave-requests/sick-leaves', [HrLeaveRequestController::class, 'sickLeaves'])->name('leave_requests.sick_leaves');
+    Route::get('leave-requests/business-trips', [HrLeaveRequestController::class, 'businessTrips'])->name('leave_requests.business_trips');
     Route::get('leave-requests/pending', [HrLeaveRequestController::class, 'pending'])->name('leave_requests.pending');
     Route::get('leave-requests/{leaveRequest}', [HrLeaveRequestController::class, 'show'])->name('leave_requests.show');
     Route::put('leave-requests/{leaveRequest}', [HrLeaveRequestController::class, 'update'])->name('leave_requests.update');
@@ -94,7 +110,20 @@ Route::middleware(['auth'])->post('/api/notifications/mark-as-read', [Notificati
     ->name('api.notifications.mark_as_read');
 
 // Маршруты только для администраторов
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', [AdminController::class, 'index'])->name('index');
-    // Другие маршруты для администраторов...
+Route::middleware(['auth', 'role:admin'])->name('admin.')->prefix('admin')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::resource('users', UserController::class);
+    Route::resource('departments', DepartmentController::class);
+    Route::resource('positions', PositionController::class);
+    Route::resource('notifications', NotificationController::class);
+    Route::resource('attendance', AttendanceController::class)->only(['index', 'store', 'update']);
+    Route::get('/leave-requests', [HrLeaveRequestController::class, 'index'])->name('leave_requests.index');
+    Route::get('/leave-requests/pending', [HrLeaveRequestController::class, 'pending'])->name('leave_requests.pending');
+    Route::get('/leave-requests/vacations', [HrLeaveRequestController::class, 'vacations'])->name('leave_requests.vacations');
+    Route::get('/leave-requests/sick-leaves', [HrLeaveRequestController::class, 'sickLeaves'])->name('leave_requests.sick_leaves');
+    Route::get('/leave-requests/business-trips', [HrLeaveRequestController::class, 'businessTrips'])->name('leave_requests.business_trips');
+    Route::put('/leave-requests/{leaveRequest}', [HrLeaveRequestController::class, 'update'])->name('leave_requests.update');
+    Route::get('/leave-requests/{leaveRequest}', [HrLeaveRequestController::class, 'show'])->name('leave_requests.show');
+    Route::resource('personnel', HrController::class);
+    Route::get('/analytics', [App\Http\Controllers\Admin\AdminAnalyticsController::class, 'index'])->name('analytics.index');
 });

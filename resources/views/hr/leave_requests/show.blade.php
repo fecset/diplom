@@ -29,11 +29,11 @@
                     </div>
                     <div class="request-details__info-row">
                         <div class="request-details__info-label">Должность:</div>
-                        <div class="request-details__info-value">{{ $leaveRequest->user->position }}</div>
+                        <div class="request-details__info-value">{{ $leaveRequest->user->position?->name ?? '—' }}</div>
                     </div>
                     <div class="request-details__info-row">
                         <div class="request-details__info-label">Отдел:</div>
-                        <div class="request-details__info-value">{{ $leaveRequest->user->department }}</div>
+                        <div class="request-details__info-value">{{ $leaveRequest->user->department?->name ?? '—' }}</div>
                     </div>
                     <div class="request-details__info-row">
                         <div class="request-details__info-label">Email:</div>
@@ -54,6 +54,8 @@
                         <div class="request-details__info-value">
                             @if($leaveRequest->type === 'vacation')
                                 <span class="request-details__badge request-details__badge--vacation">Отпуск</span>
+                            @elseif($leaveRequest->type === 'business_trip')
+                                <span class="request-details__badge request-details__badge--business_trip">Командировка</span>
                             @else
                                 <span class="request-details__badge request-details__badge--sick">Больничный</span>
                             @endif
@@ -284,6 +286,11 @@
 
 .request-details__badge--vacation {
     background-color: #2196F3;
+    color: white;
+}
+
+.request-details__badge--business_trip {
+    background-color: #9C27B0;
     color: white;
 }
 
