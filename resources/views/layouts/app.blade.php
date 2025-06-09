@@ -8,6 +8,7 @@
 
     <title>@yield('title', 'Система управления персоналом')</title>
 
+    <link rel="icon" type="image/svg+xml" href="{{ asset('icons/logo_orange.svg') }}">
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
 
