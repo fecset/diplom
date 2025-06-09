@@ -46,13 +46,13 @@ Route::middleware(['auth', 'role:employee,hr_specialist,admin'])->group(function
     Route::resource('leave_requests', LeaveRequestController::class)->only(['index', 'create', 'store']);
     Route::get('leave_requests/vacation', [LeaveRequestController::class, 'vacation'])->name('leave_requests.vacation');
     Route::get('leave_requests/sick_leave', [LeaveRequestController::class, 'sickLeave'])->name('leave_requests.sick_leave');
-    
+
     // Добавляем специальные маршруты для создания заявок
     Route::get('leave_requests/vacation/create', [LeaveRequestController::class, 'create'])->defaults('type', 'vacation')->name('leave_requests.vacation.create');
     Route::get('leave_requests/sick_leave/create', [LeaveRequestController::class, 'create'])->defaults('type', 'sick_leave')->name('leave_requests.sick_leave.create');
     Route::get('leave_requests/business_trip/create', [LeaveRequestController::class, 'create'])->defaults('type', 'business_trip')->name('leave_requests.business_trip.create');
     Route::get('leave_requests/business_trip', [LeaveRequestController::class, 'businessTrip'])->name('leave_requests.business_trip');
-    
+
     // Маршруты профиля пользователя
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
@@ -60,8 +60,6 @@ Route::middleware(['auth', 'role:employee,hr_specialist,admin'])->group(function
 
     // Маршрут для скачивания справки с места работы
     Route::get('/profile/download-certificate', [App\Http\Controllers\ProfileController::class, 'downloadCertificate'])->name('profile.downloadCertificate');
-
-    // Другие маршруты личного кабинета...
 });
 Route::get('attendance', [AttendanceController::class, 'index'])->name('hr.attendance.index');
 // Маршруты для HR-специалистов и администраторов
@@ -70,11 +68,11 @@ Route::middleware(['auth', 'role:hr_specialist,admin'])->prefix('hr')->name('hr.
     // Другие маршруты для HR...
 
     Route::post('attendance', [AttendanceController::class, 'store'])->name('attendance.store');
-    
+
     // Маршруты для кадрового учёта
     Route::get('personnel', [HrController::class, 'personnel'])->name('personnel.index');
     Route::get('personnel/create', [HrController::class, 'createEmployee'])->name('personnel.create');
-    
+
     // Маршруты для работы с сотрудниками (с ограничением для администраторов)
     Route::middleware(['admin.role'])->group(function () {
         Route::post('personnel', [HrController::class, 'storeEmployee'])->name('personnel.store');
@@ -82,10 +80,10 @@ Route::middleware(['auth', 'role:hr_specialist,admin'])->prefix('hr')->name('hr.
         Route::put('personnel/{user}', [HrController::class, 'updateEmployee'])->name('personnel.update');
         Route::delete('personnel/{user}', [HrController::class, 'deleteEmployee'])->name('personnel.delete');
     });
-    
+
     // Просмотр сотрудников без ограничений для HR-специалистов
     Route::get('personnel/{user}', [HrController::class, 'showEmployee'])->name('personnel.show');
-    
+
     // Маршруты для управления заявками на отпуск и больничный
     Route::get('leave-requests', [HrLeaveRequestController::class, 'index'])->name('leave_requests.index');
     Route::get('leave-requests/vacations', [HrLeaveRequestController::class, 'vacations'])->name('leave_requests.vacations');
